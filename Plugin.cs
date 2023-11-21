@@ -19,6 +19,8 @@ namespace Pinger
 	  {
 		await Task.Delay(1000);
 	  };
+	  Logger.LogInfo("StartOfRound.Instance found...");
+
 	}
 
   }
