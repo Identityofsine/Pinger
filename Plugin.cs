@@ -4,6 +4,7 @@ using Pinger.Overrider;
 using System.Threading.Tasks;
 using GameNetcodeStuff;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Pinger
 {
@@ -21,7 +22,31 @@ namespace Pinger
 	  Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
 	  _harmony = new Harmony(PluginInfo.PLUGIN_GUID);
 	  _harmony.PatchAll(typeof(StartOfRound_Awake));
+	  _harmony.PatchAll(typeof(HUDManager_MeetsScanNodeRequirements));
+	  _harmony.PatchAll(typeof(HUDManager_NodeIsNotVisible));
 	  StartLogicLoop();
+	  DummyKeybind();
+	}
+
+	private async void DummyKeybind()
+	{
+	  while (true)
+	  {
+		await Task.Delay(5000);
+		if (_mainPlayer == null) continue;
+		RaycastHit hit = shootRay(_mainPlayer.localVisorTargetPoint.position.x, _mainPlayer.localVisorTargetPoint.position.y, _mainPlayer.localVisorTargetPoint.position.z);
+		if (_mainPlayer.gameplayCamera == null)
+		{
+		  Logger.LogWarning("Gameplay camera is null");
+		  continue;
+		}
+		float x = _mainPlayer.gameplayCamera.transform.position.x;
+		float y = _mainPlayer.gameplayCamera.transform.position.y;
+		float z = _mainPlayer.gameplayCamera.transform.position.z;
+		createPing(x, y, z, hit);
+	  }
+
+
 	}
 
 	private async void StartLogicLoop()
@@ -46,6 +71,7 @@ namespace Pinger
 	  UpdatePlayerCamera();
 	}
 
+
 	private async void UpdatePlayerCamera()
 	{
 	  while (true)
@@ -56,14 +82,10 @@ namespace Pinger
 		  Logger.LogInfo("Main player is null");
 		  return;
 		}
-		float x = _mainPlayer.localVisorTargetPoint.eulerAngles.x;
-		float y = _mainPlayer.localVisorTargetPoint.eulerAngles.y;
-		float z = _mainPlayer.localVisorTargetPoint.eulerAngles.z;
 
 		/* Raytracing is not working 
-
 		RaycastHit hit = shootRay(x, y, z);
-		float x_hit, y_hit, z_hit;
+	float x_hit, y_hit, z_hit;
 		//get xyz of the object in space
 		if (hit.collider != null)
 		{
@@ -72,9 +94,45 @@ namespace Pinger
 		  z_hit = hit.collider.transform.position.z;
 		  Logger.LogInfo($"Hit: {hit.collider.name} at {x_hit}, {y_hit}, {z_hit}");
 		}
-		*/
+	*/
 
 	  }
+	}
+
+	private bool createPing(float x, float y, float z, in RaycastHit hit)
+	{
+
+	  string header = "r/bbcworship";
+	  string sub = "r/bbcworship ping";
+
+	  GameObject gOBJ = new GameObject("PlayerPing");
+
+	  ScanNodeProperties[] scanNodeProperties = ScanNodeProperties.FindObjectsByType<ScanNodeProperties>(FindObjectsSortMode.None);
+
+	  //copy scanNodeOne
+	  ScanNodeProperties copy = Instantiate(scanNodeProperties[0]);
+	  copy.headerText = header;
+	  copy.subText = sub;
+	  copy.transform.position = new Vector3(x, y, z);
+
+
+	  foreach (ScanNodeProperties scanNodeProperty in scanNodeProperties)
+	  {
+		//debug	
+		try
+		{
+		  Logger.LogInfo($"ScanNodeProperties (active : {scanNodeProperty.isActiveAndEnabled}): {scanNodeProperty.name}, header:{scanNodeProperty.headerText}, pos: {scanNodeProperty.transform.position.x}, {scanNodeProperty.transform.position.y}, {scanNodeProperty.transform.position.z}, max_range:{scanNodeProperty.maxRange}");
+		  scanNodeProperty.maxRange = 999;
+		  scanNodeProperty.requiresLineOfSight = false;
+		}
+		catch
+		{
+		  Logger.LogError($"Error with {scanNodeProperty.name}");
+		}
+	  }
+
+
+	  return true;
 	}
 
 	private RaycastHit shootRay(float x, float y, float z)
@@ -83,12 +141,7 @@ namespace Pinger
 	  if (Physics.Raycast(_mainPlayer.localVisorTargetPoint.position, _mainPlayer.localVisorTargetPoint.forward, out hit, 1000f))
 	  {
 	  }
-	  else
-	  {
-	  }
-
 	  return hit;
 	}
-
   }
 }
