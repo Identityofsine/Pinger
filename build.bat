@@ -1,7 +1,7 @@
 @echo off
 
 REM DLLNAME
-set dllName="NoBackgroundAudio.dll"
+set dllName="Pinger.dll"
 
 REM Game Variable
 set gameName="Lethal Company.exe"

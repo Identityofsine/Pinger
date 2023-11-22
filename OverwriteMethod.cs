@@ -9,12 +9,11 @@ namespace Pinger.Overrider
   {
 	[HarmonyPatch(typeof(StartOfRound), "Awake")]
 	[HarmonyPrefix]
-	static bool Prefix(ref bool __isOriginal)
+	static bool Prefix()
 	{
 	  Debug.Log("StartOfRound.Awake() is called");
 	  //do something before original method
 	  //run original
-	  __isOriginal = true;
 	  return true;
 	}
   }
