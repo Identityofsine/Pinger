@@ -3,6 +3,7 @@ using HarmonyLib;
 using Pinger.Overrider;
 using System.Threading.Tasks;
 using GameNetcodeStuff;
+using UnityEngine;
 
 namespace Pinger
 {
@@ -36,6 +37,7 @@ namespace Pinger
 
 	  while (_mainPlayer == null)
 	  {
+		await Task.Delay(250);
 		_mainPlayer = StartOfRound.Instance.localPlayerController;
 	  }
 
@@ -58,8 +60,34 @@ namespace Pinger
 		float y = _mainPlayer.localVisorTargetPoint.eulerAngles.y;
 		float z = _mainPlayer.localVisorTargetPoint.eulerAngles.z;
 
-		Logger.LogInfo($"Updating Camera (x:{x},y:{y},z:{z})");
+		/* Raytracing is not working 
+
+		RaycastHit hit = shootRay(x, y, z);
+		float x_hit, y_hit, z_hit;
+		//get xyz of the object in space
+		if (hit.collider != null)
+		{
+		  x_hit = hit.collider.transform.position.x;
+		  y_hit = hit.collider.transform.position.y;
+		  z_hit = hit.collider.transform.position.z;
+		  Logger.LogInfo($"Hit: {hit.collider.name} at {x_hit}, {y_hit}, {z_hit}");
+		}
+		*/
+
 	  }
+	}
+
+	private RaycastHit shootRay(float x, float y, float z)
+	{
+	  RaycastHit hit;
+	  if (Physics.Raycast(_mainPlayer.localVisorTargetPoint.position, _mainPlayer.localVisorTargetPoint.forward, out hit, 1000f))
+	  {
+	  }
+	  else
+	  {
+	  }
+
+	  return hit;
 	}
 
   }
