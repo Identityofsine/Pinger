@@ -1,5 +1,7 @@
 using HarmonyLib;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using GameNetcodeStuff;
 using System.Reflection;
 
 namespace Pinger.Overrider
@@ -54,5 +56,27 @@ namespace Pinger.Overrider
 
   }
 
+  [HarmonyPatch]
+  internal class KeyboardPing
+  {
+	[HarmonyPatch(typeof(PlayerControllerB), "Update")]
+	[HarmonyPostfix]
+	static void PingCommand(PlayerControllerB __instance)
+	{
+	  bool flag = false;
+	  if (!__instance.IsOwner || !__instance.isPlayerControlled || __instance.inTerminalMenu || __instance.isTypingChat || __instance.isPlayerDead)
+	  {
+		flag = true;
+	  }
+	  if (!flag)
+	  {
+		if (Keyboard.current.qKey.wasPressedThisFrame)
+		{
+		  Plugin.Instance.createPingWherePlayerIsLooking();
+		}
+	  }
+	  return;
+	}
+  }
 }
 
