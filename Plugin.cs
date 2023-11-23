@@ -2,19 +2,51 @@
 using HarmonyLib;
 using Pinger.Overrider;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using GameNetcodeStuff;
 using UnityEngine;
-using UnityEngine.InputSystem;
+using Newtonsoft.Json;
+using LC_API.ServerAPI;
 
 namespace Pinger
 {
+
+  struct CustomScanNode
+  {
+	public long created { get; set; }
+	public ScanNodeProperties scanNode { get; set; }
+  }
+
+  [JsonObject(MemberSerialization.OptIn)]
+  class PingData
+  {
+	[JsonProperty]
+	public float x { get; set; }
+	[JsonProperty]
+	public float y { get; set; }
+	[JsonProperty]
+	public float z { get; set; }
+	[JsonProperty]
+	public long created { get; set; }
+	[JsonProperty]
+	public string owner { get; set; }
+  }
+
+
+
   [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
   public class Plugin : BaseUnityPlugin
   {
 
 	public static Plugin Instance { get; private set; }
 
+	private const string SIGNATURE = "player_ping";
+	private const int LIFESPAN = 10000;
+
 	private Harmony _harmony;
+	private ScanNodeProperties _scanNodeMaster;
+	//make linked list
+	private LinkedList<CustomScanNode> _scanNodes = new LinkedList<CustomScanNode>();
 	private static bool _isPatched = false;
 	private static PlayerControllerB _mainPlayer = null;
 
@@ -32,35 +64,8 @@ namespace Pinger
 	  StartLogicLoop();
 	}
 
-	private async void DummyKeybind()
-	{
-	  while (true)
-	  {
-		await Task.Delay(5000);
-		if (_mainPlayer == null) continue;
-
-
-		float x = _mainPlayer.gameplayCamera.transform.position.x;
-		float y = _mainPlayer.gameplayCamera.transform.position.y;
-		float z = _mainPlayer.gameplayCamera.transform.position.z;
-
-
-		RaycastHit hit = shootRay(x, y, z);
-		if (_mainPlayer.gameplayCamera == null)
-		{
-		  Logger.LogWarning("Gameplay camera is null");
-		  continue;
-		}
-		float x_pre = hit.transform.position.x;
-		float y_pre = hit.transform.position.y;
-		float z_pre = hit.transform.position.z;
-		createPing(x_pre, y_pre, z_pre, hit);
-	  }
-	}
-
 	private async void StartLogicLoop()
 	{
-	  if (_isPatched) return;
 
 	  while (StartOfRound.Instance == null)
 	  {
@@ -76,22 +81,62 @@ namespace Pinger
 	  }
 
 	  _isPatched = true;
+	  handleIncomingPings();
 
-	  UpdatePlayerCamera();
 	}
 
-
-	private async void UpdatePlayerCamera()
+	private void handleIncomingPings()
 	{
+	  Networking.GetString = (string message, string signature) =>
+	  {
+		Logger.LogInfo($"Received message: {message}");
+		if (signature.Equals(SIGNATURE))
+		{
+		  //try to parse the message
+		  PingData pingData = JsonConvert.DeserializeObject<PingData>(message);
+		  if (pingData == null)
+		  {
+			Logger.LogWarning("Failed to parse ping data");
+		  }
+		  else
+		  {
+			Logger.LogMessage($"Received ping from {pingData.owner} at {pingData.x} {pingData.y} {pingData.z}");
+			createPing(pingData.x, pingData.y, pingData.z, new RaycastHit(), pingData.owner);
+		  }
+
+		}
+	  };
+	}
+
+	private async void checkAndDeleteOldPings()
+	{
+	  int lifespan = 10000; // 10 seconds
 	  while (true)
 	  {
-		await Task.Delay(250);
-		if (_mainPlayer == null)
+		await Task.Delay(1000);
+		long now = System.DateTimeOffset.Now.ToUnixTimeMilliseconds();
+		for (var node = _scanNodes.First; node != null; node = node.Next)
 		{
-		  Logger.LogInfo("Main player is null");
-		  return;
+		  if (now - node.Value.created > lifespan)
+		  {
+			Logger.LogMessage($"Deleting ping at {node.Value.scanNode.transform.position}");
+			Destroy(node.Value.scanNode);
+			_scanNodes.Remove(node);
+		  }
+		  Logger.LogMessage($"Ping at {node.Value.scanNode.transform.position} is still alive for {lifespan - (now - node.Value.created)}");
 		}
 	  }
+	}
+
+	private void OnDestroy()
+	{
+	  // Plugin cleanup logic
+	  //_harmony.UnpatchSelf();
+	  for (var node = _scanNodes.First; node != null; node = node.Next)
+	  {
+		Destroy(node.Value.scanNode);
+	  }
+
 	}
 
 	public bool createPingWherePlayerIsLooking()
@@ -104,36 +149,94 @@ namespace Pinger
 	  RaycastHit hit = this.shootRay(camera_x, camera_y, camera_z);
 
 	  //get the point where the raycast hit
-	  point_x = hit.transform.position.x;
-	  point_y = hit.transform.position.y;
-	  point_z = hit.transform.position.z;
+	  point_x = hit.point.x;
+	  point_y = hit.point.y;
+	  point_z = hit.point.z;
 
-	  return createPing(point_x, point_y, point_z, hit);
+	  Logger.LogMessage($"Creating Ping on the surface of {hit.transform.name}");
+	  CustomScanNode ping_obj = createPing(point_x, point_y, point_z, hit);
+
+	  if (ping_obj.scanNode == null)
+	  {
+		return false;
+	  }
+
+
+	  string message = JsonConvert.SerializeObject(new PingData
+	  {
+		x = point_x,
+		y = point_y,
+		z = point_z,
+		created = ping_obj.created,
+		owner = _mainPlayer.playerUsername
+	  });
+
+	  Networking.Broadcast(message, SIGNATURE);
+	  Logger.LogInfo("Sent ping:" + message);
+
+	  return true;
 	}
 
-	private bool createPing(float x, float y, float z, in RaycastHit hit)
+	private CustomScanNode createPing(float x, float y, float z, in RaycastHit hit)
+	{
+	  return createPing(x, y, z, hit, _mainPlayer.playerUsername);
+	}
+
+	private CustomScanNode createPing(float x, float y, float z, in RaycastHit hit, string playerName)
 	{
 
-	  string header = "r/bbcworship";
-	  string sub = "r/bbcworship ping";
+	  string header = playerName + "'s ping";
+	  string sub = "PINGGG";
 
 	  Logger.LogMessage($"Creating Ping at : {x} {y} {z}");
 
 	  ScanNodeProperties[] scanNodeProperties = ScanNodeProperties.FindObjectsByType<ScanNodeProperties>(FindObjectsSortMode.None);
 
+	  if (_scanNodeMaster == null)
+	  {
+		if (scanNodeProperties.Length == 0)
+		{
+		  Logger.LogWarning("No scan node master found");
+		  return new CustomScanNode();
+		}
+		else
+		{
+		  _scanNodeMaster = scanNodeProperties[0];
+		  checkAndDeleteOldPings();
+		}
+	  }
+
 	  //copy scanNodeOne
-	  ScanNodeProperties copy = Instantiate(scanNodeProperties[0]);
+	  ScanNodeProperties copy = Instantiate(_scanNodeMaster);
 	  copy.headerText = header;
 	  copy.subText = sub;
 	  copy.transform.position = new Vector3(x, y, z);
+	  copy.maxRange = 30;
+	  copy.minRange = 1;
+	  copy.requiresLineOfSight = false;
 
-	  return true;
+	  CustomScanNode customScanNode = new CustomScanNode();
+	  long now = System.DateTimeOffset.Now.ToUnixTimeMilliseconds();
+	  customScanNode.created = now;
+	  customScanNode.scanNode = copy;
+
+	  this._scanNodes.AddLast(customScanNode);
+
+	  return customScanNode;
 	}
 
 	private RaycastHit shootRay(float x, float y, float z)
 	{
 	  RaycastHit hit;
-	  if (Physics.Raycast(_mainPlayer.localVisorTargetPoint.position, _mainPlayer.localVisorTargetPoint.forward, out hit, 1000f))
+	  float someOffset = 1.25f;
+
+	  // Assuming _mainPlayer is the player GameObject
+	  Transform playerTransform = _mainPlayer.gameplayCamera.transform;
+	  // Offset the starting position of the ray to be in front of the player
+
+	  Vector3 rayStart = playerTransform.position + playerTransform.forward * someOffset;
+
+	  if (Physics.Raycast(rayStart, playerTransform.forward, out hit, 1000f))
 	  {
 	  }
 	  return hit;

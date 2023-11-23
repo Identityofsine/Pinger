@@ -28,8 +28,7 @@ namespace Pinger.Overrider
 	[HarmonyPrefix]
 	static bool Postfix(ref bool __result)
 	{
-	  __result = true;
-	  return false;
+	  return true;
 	}
 
 	private static MethodInfo TargetMethod()
