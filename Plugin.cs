@@ -45,12 +45,17 @@ namespace Pinger
 
 	private Harmony _harmony;
 	private ScanNodeProperties _scanNodeMaster;
+
+
 	//make linked list
 	private LinkedList<CustomScanNode> _scanNodes = new LinkedList<CustomScanNode>();
 	private static bool _isPatched = false;
 	private static bool _isPatching = false;
 
+
+	//gameobjects
 	private static PlayerControllerB _mainPlayer = null;
+	private static HUDManager _hudManager = null;
 
 
 	private void Awake()
@@ -80,6 +85,12 @@ namespace Pinger
 	  {
 		await Task.Delay(250);
 		_mainPlayer = StartOfRound.Instance.localPlayerController;
+	  }
+
+	  while (_hudManager == null)
+	  {
+		await Task.Delay(250);
+		_hudManager = HUDManager.Instance;
 	  }
 
 	  _isPatched = true;
@@ -227,6 +238,16 @@ namespace Pinger
 	  customScanNode.scanNode = copy;
 
 	  this._scanNodes.AddLast(customScanNode);
+
+	  if (_hudManager == null)
+	  {
+		//well... do nothing.
+		Logger.LogWarning("HUDManager is null");
+	  }
+	  else
+	  {
+		_hudManager.UIAudio.PlayOneShot(_hudManager.scanSFX);
+	  }
 
 	  return customScanNode;
 	}
