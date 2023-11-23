@@ -1,8 +1,10 @@
+using BepInEx;
 using HarmonyLib;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using GameNetcodeStuff;
 using System.Reflection;
+using System.Collections;
 
 namespace Pinger.Overrider
 {
@@ -58,10 +60,32 @@ namespace Pinger.Overrider
   [HarmonyPatch]
   internal class KeyboardPing
   {
+	private static float lastQPress = 0;
+	const float Q_RESET = .3f; // one second
+	private static bool isWaiting = false;
+	private static bool qPressed = false;
+
+	private static IEnumerator WaitForNextQ()
+	{
+	  if (!isWaiting)
+	  {
+		isWaiting = true;
+		yield return new WaitForSeconds(Q_RESET);
+
+		if (!qPressed)
+		  Plugin.Instance.createPingWherePlayerIsLooking(false);
+
+		isWaiting = false;
+	  }
+
+	}
+
+
 	[HarmonyPatch(typeof(PlayerControllerB), "Update")]
 	[HarmonyPostfix]
 	static void PingCommand(PlayerControllerB __instance)
 	{
+	  long CURRENT_TIME = System.DateTimeOffset.Now.ToUnixTimeMilliseconds();
 	  bool flag = false;
 	  if (!__instance.IsOwner || !__instance.isPlayerControlled || __instance.inTerminalMenu || __instance.isTypingChat || __instance.isPlayerDead)
 	  {
@@ -71,19 +95,30 @@ namespace Pinger.Overrider
 	  {
 		if (Keyboard.current.qKey.wasPressedThisFrame)
 		{
-		  Debug.Log("Q key pressed");
-		  bool response = Plugin.Instance.createPingWherePlayerIsLooking();
-
-		  if (response)
+		  if (!qPressed)
 		  {
+			qPressed = true;
+			__instance.StartCoroutine(WaitForNextQ());
 		  }
 		  else
 		  {
-			Debug.Log("Ping not created");
+
+			bool response = Plugin.Instance.createPingWherePlayerIsLooking(true);
+		  }
+		  return;
+		}
+		if (qPressed)
+		{
+		  lastQPress += Time.deltaTime;
+
+		  if (lastQPress >= Q_RESET)
+		  {
+			qPressed = false;
+			isWaiting = false;
+			lastQPress = 0;
 		  }
 		}
 	  }
-	  return;
 	}
   }
 }

@@ -151,7 +151,7 @@ namespace Pinger
 
 	}
 
-	public bool createPingWherePlayerIsLooking()
+	public bool createPingWherePlayerIsLooking(bool is_danger = false)
 	{
 	  if (_mainPlayer == null)
 	  {
@@ -172,7 +172,7 @@ namespace Pinger
 	  point_z = hit.point.z;
 
 	  Logger.LogMessage($"Creating Ping on the surface of {hit.transform.name}");
-	  CustomScanNode ping_obj = createPing(point_x, point_y, point_z, hit);
+	  CustomScanNode ping_obj = createPing(point_x, point_y, point_z, hit, is_danger);
 
 	  if (ping_obj.scanNode == null)
 	  {
@@ -196,10 +196,20 @@ namespace Pinger
 
 	private CustomScanNode createPing(float x, float y, float z, in RaycastHit hit)
 	{
-	  return createPing(x, y, z, hit, _mainPlayer.playerUsername);
+	  return createPing(x, y, z, hit, false, _mainPlayer.playerUsername);
+	}
+
+	private CustomScanNode createPing(float x, float y, float z, in RaycastHit hit, bool isDanger)
+	{
+	  return createPing(x, y, z, hit, isDanger, _mainPlayer.playerUsername);
 	}
 
 	private CustomScanNode createPing(float x, float y, float z, in RaycastHit hit, string playerName)
+	{
+	  return createPing(x, y, z, hit, false, playerName);
+	}
+
+	private CustomScanNode createPing(float x, float y, float z, in RaycastHit hit, bool isDanger, string playerName)
 	{
 
 	  string header = playerName + "'s ping";
@@ -225,12 +235,35 @@ namespace Pinger
 
 	  //copy scanNodeOne
 	  ScanNodeProperties copy = Instantiate(_scanNodeMaster);
+	  copy.name = "PlayerPing";
 	  copy.headerText = header;
 	  copy.subText = sub;
 	  copy.transform.position = new Vector3(x, y, z);
 	  copy.maxRange = 30;
 	  copy.minRange = 1;
 	  copy.requiresLineOfSight = false;
+	  if (isDanger)
+	  {
+		copy.nodeType = 1;
+	  }
+	  else
+	  {
+		copy.nodeType = 2;
+	  }
+
+	  /* DEBUG LINES */
+	  RectTransform[] _hud_rect_transformations = _hudManager.scanElements;
+	  //display all the hud elements
+	  foreach (RectTransform rect in _hud_rect_transformations)
+	  {
+		var inner_circle = CircleHelper.Helper.debug_GrabInnerCircle(rect);
+		if (inner_circle != null)
+		{
+		  //print the inner circle
+		  Logger.LogMessage($"Inner Circle: {rect.name} / {inner_circle.position}");
+		}
+	  }
+	  /* END OF DEBUG LINES */
 
 	  CustomScanNode customScanNode = new CustomScanNode();
 	  long now = System.DateTimeOffset.Now.ToUnixTimeMilliseconds();
