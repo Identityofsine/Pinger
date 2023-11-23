@@ -48,6 +48,8 @@ namespace Pinger
 	//make linked list
 	private LinkedList<CustomScanNode> _scanNodes = new LinkedList<CustomScanNode>();
 	private static bool _isPatched = false;
+	private static bool _isPatching = false;
+
 	private static PlayerControllerB _mainPlayer = null;
 
 
@@ -103,7 +105,6 @@ namespace Pinger
 			Logger.LogMessage($"Received ping from {pingData.owner} at {pingData.x} {pingData.y} {pingData.z}");
 			createPing(pingData.x, pingData.y, pingData.z, new RaycastHit(), pingData.owner);
 		  }
-
 		}
 	  };
 	}
@@ -117,13 +118,13 @@ namespace Pinger
 		long now = System.DateTimeOffset.Now.ToUnixTimeMilliseconds();
 		for (var node = _scanNodes.First; node != null; node = node.Next)
 		{
+		  if (node.Value.scanNode == null) continue;
 		  if (now - node.Value.created > lifespan)
 		  {
 			Logger.LogMessage($"Deleting ping at {node.Value.scanNode.transform.position}");
 			Destroy(node.Value.scanNode);
 			_scanNodes.Remove(node);
 		  }
-		  Logger.LogMessage($"Ping at {node.Value.scanNode.transform.position} is still alive for {lifespan - (now - node.Value.created)}");
 		}
 	  }
 	}
@@ -141,7 +142,13 @@ namespace Pinger
 
 	public bool createPingWherePlayerIsLooking()
 	{
-	  if (_mainPlayer == null) return false;
+	  if (_mainPlayer == null)
+	  {
+		if (_isPatching) return false;
+		StartLogicLoop();
+		_isPatching = true;
+		return false;
+	  };
 	  float camera_x, camera_y, camera_z, point_x, point_y, point_z;
 	  camera_x = _mainPlayer.gameplayCamera.transform.position.x;
 	  camera_y = _mainPlayer.gameplayCamera.transform.position.y;
@@ -172,7 +179,6 @@ namespace Pinger
 	  });
 
 	  Networking.Broadcast(message, SIGNATURE);
-	  Logger.LogInfo("Sent ping:" + message);
 
 	  return true;
 	}
@@ -186,7 +192,7 @@ namespace Pinger
 	{
 
 	  string header = playerName + "'s ping";
-	  string sub = "PINGGG";
+	  string sub = "Player Ping <!>";
 
 	  Logger.LogMessage($"Creating Ping at : {x} {y} {z}");
 

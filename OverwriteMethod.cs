@@ -71,7 +71,16 @@ namespace Pinger.Overrider
 	  {
 		if (Keyboard.current.qKey.wasPressedThisFrame)
 		{
-		  Plugin.Instance.createPingWherePlayerIsLooking();
+		  Debug.Log("Q key pressed");
+		  bool response = Plugin.Instance.createPingWherePlayerIsLooking();
+
+		  if (response)
+		  {
+		  }
+		  else
+		  {
+			Debug.Log("Ping not created");
+		  }
 		}
 	  }
 	  return;

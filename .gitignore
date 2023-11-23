@@ -4,3 +4,7 @@
 ./obj
 obj/*
 obj/
+pkg/
+pkg/*
+.pkg/*
+*.pkg/*
