@@ -102,9 +102,8 @@ namespace Pinger
 
 	private void handleIncomingPings()
 	{
-	  Networking.GetString = (string message, string signature) =>
+	  Networking.GetString += (string message, string signature) =>
 	  {
-		Logger.LogInfo($"Received message: {message}");
 		if (signature.Equals(SIGNATURE))
 		{
 		  //try to parse the message
@@ -146,16 +145,26 @@ namespace Pinger
 	{
 	  // Plugin cleanup logic
 	  //_harmony.UnpatchSelf();
+	  ScanNodeProperties[] scanNodeProperties = ScanNodeProperties.FindObjectsByType<ScanNodeProperties>(FindObjectsSortMode.None);
 	  for (var node = _scanNodes.First; node != null; node = node.Next)
 	  {
 		Destroy(node.Value.scanNode);
+		//find all the scan nodes and delete them
+		for (int i = 0; i < scanNodeProperties.Length; i++)
+		{
+		  if (scanNodeProperties[i].transform.position == node.Value.scanNode.transform.position)
+		  {
+			Destroy(scanNodeProperties[i]);
+			break;
+		  }
+		}
 	  }
 
 	}
 
 	public bool createPingWherePlayerIsLooking(bool is_danger = false)
 	{
-	  if (_mainPlayer == null)
+	  if (_mainPlayer == null || _hudManager == null)
 	  {
 		if (_isPatching) return false;
 		StartLogicLoop();
@@ -243,7 +252,7 @@ namespace Pinger
 	  copy.subText = sub;
 	  copy.transform.position = new Vector3(x, y, z);
 	  copy.maxRange = 30;
-	  copy.minRange = 1;
+	  copy.minRange = 0;
 	  copy.requiresLineOfSight = false;
 	  if (isDanger)
 	  {
@@ -254,20 +263,6 @@ namespace Pinger
 	  {
 		copy.nodeType = 2;
 	  }
-
-	  /* DEBUG LINES */
-	  RectTransform[] _hud_rect_transformations = _hudManager.scanElements;
-	  //display all the hud elements
-	  foreach (RectTransform rect in _hud_rect_transformations)
-	  {
-		var inner_circle = CircleHelper.Helper.debug_GrabInnerCircle(rect);
-		if (inner_circle != null)
-		{
-		  //print the inner circle
-		  Logger.LogMessage($"Inner Circle: {rect.name} / {inner_circle.position}");
-		}
-	  }
-	  /* END OF DEBUG LINES */
 
 	  CustomScanNode customScanNode = new CustomScanNode();
 	  long now = System.DateTimeOffset.Now.ToUnixTimeMilliseconds();
@@ -300,9 +295,8 @@ namespace Pinger
 
 	  Vector3 rayStart = playerTransform.position + playerTransform.forward * someOffset;
 
-	  if (Physics.Raycast(rayStart, playerTransform.forward, out hit, 1000f))
-	  {
-	  }
+	  Physics.Raycast(rayStart, playerTransform.forward, out hit, 1000f);
+
 	  return hit;
 	}
   }
