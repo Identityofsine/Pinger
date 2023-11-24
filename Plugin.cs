@@ -30,6 +30,8 @@ namespace Pinger
 	public long created { get; set; }
 	[JsonProperty]
 	public string owner { get; set; }
+	[JsonProperty]
+	public bool isDanger { get; set; }
   }
 
 
@@ -114,7 +116,7 @@ namespace Pinger
 		  else
 		  {
 			Logger.LogMessage($"Received ping from {pingData.owner} at {pingData.x} {pingData.y} {pingData.z}");
-			createPing(pingData.x, pingData.y, pingData.z, new RaycastHit(), pingData.owner);
+			createPing(pingData.x, pingData.y, pingData.z, new RaycastHit(), pingData.isDanger, pingData.owner);
 		  }
 		}
 	  };
@@ -186,7 +188,8 @@ namespace Pinger
 		y = point_y,
 		z = point_z,
 		created = ping_obj.created,
-		owner = _mainPlayer.playerUsername
+		owner = _mainPlayer.playerUsername,
+		isDanger = is_danger
 	  });
 
 	  Networking.Broadcast(message, SIGNATURE);
@@ -245,6 +248,7 @@ namespace Pinger
 	  if (isDanger)
 	  {
 		copy.nodeType = 1;
+		copy.subText = "DANGER <!>";
 	  }
 	  else
 	  {
