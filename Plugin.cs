@@ -15,6 +15,7 @@ namespace Pinger
   {
 	public long created { get; set; }
 	public ScanNodeProperties scanNode { get; set; }
+	public string owner { get; set; }
   }
 
   [JsonObject(MemberSerialization.OptIn)]
@@ -67,8 +68,6 @@ namespace Pinger
 	  Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
 	  _harmony = new Harmony(PluginInfo.PLUGIN_GUID);
 	  _harmony.PatchAll(typeof(StartOfRound_Awake));
-	  _harmony.PatchAll(typeof(HUDManager_MeetsScanNodeRequirements));
-	  _harmony.PatchAll(typeof(HUDManager_NodeIsNotVisible));
 	  _harmony.PatchAll(typeof(KeyboardPing));
 	  StartLogicLoop();
 	}
@@ -121,6 +120,29 @@ namespace Pinger
 	  };
 	}
 
+	private void DeletePings(string owner) {
+		ScanNodeProperties[] scanNodeProperties = ScanNodeProperties.FindObjectsByType<ScanNodeProperties>(FindObjectsSortMode.None);
+		for (var node = _scanNodes.First; node != null; node = node.Next)
+		{
+			if(node.Value.scanNode == null) continue;
+			if(node.Value.owner != owner) {
+				Debug.Log($"Skipping ping at {node.Value.scanNode.transform.position} (Predicate failed: {node.Value.owner} != {owner})");
+				continue;
+			}
+			Debug.Log($"Deleting ping at {node.Value.scanNode.transform.position}");
+			Destroy(node.Value.scanNode);
+			//find all the scan nodes and delete them
+			for (int i = 0; i < scanNodeProperties.Length; i++)
+			{
+				if (scanNodeProperties[i].transform.position == node.Value.scanNode.transform.position)
+				{
+					Destroy(scanNodeProperties[i]);
+					break;
+				}
+			}
+		}
+	}
+
 	private async void checkAndDeleteOldPings()
 	{
 	  int lifespan = 10000; // 10 seconds
@@ -133,6 +155,7 @@ namespace Pinger
 		  if (node.Value.scanNode == null) continue;
 		  if (now - node.Value.created > lifespan)
 		  {
+			
 			Logger.LogMessage($"Deleting ping at {node.Value.scanNode.transform.position}");
 			Destroy(node.Value.scanNode);
 			_scanNodes.Remove(node);
@@ -140,6 +163,7 @@ namespace Pinger
 		}
 	  }
 	}
+
 
 	private void OnDestroy()
 	{
@@ -223,6 +247,9 @@ namespace Pinger
 
 	private CustomScanNode createPing(float x, float y, float z, in RaycastHit hit, bool isDanger, string playerName)
 	{
+		if(hasPlayerPinged(playerName)) {
+			DeletePings(playerName);
+		} 
 
 	  string header = playerName + "'s ping";
 	  string sub = "Player Ping <!>";
@@ -251,7 +278,7 @@ namespace Pinger
 	  copy.headerText = header;
 	  copy.subText = sub;
 	  copy.transform.position = new Vector3(x, y, z);
-	  copy.maxRange = 30;
+	  copy.maxRange = 200;
 	  copy.minRange = 0;
 	  copy.requiresLineOfSight = false;
 	  if (isDanger)
@@ -268,6 +295,7 @@ namespace Pinger
 	  long now = System.DateTimeOffset.Now.ToUnixTimeMilliseconds();
 	  customScanNode.created = now;
 	  customScanNode.scanNode = copy;
+		customScanNode.owner = playerName;
 
 	  this._scanNodes.AddLast(customScanNode);
 
@@ -278,16 +306,27 @@ namespace Pinger
 	  }
 	  else
 	  {
-		_hudManager.UIAudio.PlayOneShot(_hudManager.scanSFX);
+		if(customScanNode.owner == _mainPlayer.playerUsername)
+			_hudManager.UIAudio.PlayOneShot(_hudManager.scanSFX);
 	  }
 
 	  return customScanNode;
 	}
 
+	private bool hasPlayerPinged(string name) {
+		for (var node = _scanNodes.First; node != null; node = node.Next)
+		{
+			if(node.Value.owner == name) {
+				return true;
+			}
+		}
+		return false;
+	} 
+
 	private RaycastHit shootRay(float x, float y, float z)
 	{
 	  RaycastHit hit;
-	  float someOffset = 1.25f;
+	  float someOffset = 2.5f;
 
 	  // Assuming _mainPlayer is the player GameObject
 	  Transform playerTransform = _mainPlayer.gameplayCamera.transform;

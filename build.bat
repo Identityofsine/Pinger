@@ -18,6 +18,9 @@ dotnet build
 REM Copy the plugin to the game folder
 copy /y bin\Debug\netstandard2.1\%dllName% %gamePath%BepInEx\plugins
 
+REM copy into pkg folder
+copy /y bin\Debug\netstandard2.1\%dllName% pkg\plugins
+
 REM If Copy fails, exit
 if %errorlevel% neq 0 (
 		echo Copy failed

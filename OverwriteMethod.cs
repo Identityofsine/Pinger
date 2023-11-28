@@ -23,6 +23,7 @@ namespace Pinger.Overrider
 	}
   }
 
+	/*
   [HarmonyPatch(typeof(HUDManager))]
   internal class HUDManager_MeetsScanNodeRequirements
   {
@@ -58,6 +59,8 @@ namespace Pinger.Overrider
 
   }
 
+	*/
+	
   [HarmonyPatch]
   internal class KeyboardPing
   {
