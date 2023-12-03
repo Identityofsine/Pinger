@@ -7,6 +7,7 @@ using GameNetcodeStuff;
 using UnityEngine;
 using Newtonsoft.Json;
 using LC_API.ServerAPI;
+using Settings.Hook;
 
 namespace Pinger
 {
@@ -69,6 +70,7 @@ namespace Pinger
 	  _harmony = new Harmony(PluginInfo.PLUGIN_GUID);
 	  _harmony.PatchAll(typeof(StartOfRound_Awake));
 	  _harmony.PatchAll(typeof(KeyboardPing));
+		SettingsAPI.getInstance().LoadSettings("Pinger");
 	  StartLogicLoop();
 	}
 

@@ -32,9 +32,19 @@
 			<HintPath>D:\SteamLibrary\steamapps\common\Lethal Company\BepInEx\plugins\LC_API.dll</HintPath>
 		</Reference>
 
-		<Reference Include="LC_API">
+		<Reference Include="JSON">
 			<HintPath>D:\SteamLibrary\steamapps\common\Lethal Company\Lethal Company_Data\Managed\NewtonSoft.Json.dll</HintPath>
 		</Reference>
+
+		<Reference Include="TMPro">
+			<HintPath>D:\SteamLibrary\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Unity.TextMeshPro.dll</HintPath>
+		</Reference>
+
+		<Reference Include="UnityEngine-UI">
+			<HintPath>D:\SteamLibrary\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.UI.dll</HintPath>
+		</Reference>
+
+
 
 		<Reference Include="Unity-NetCode">
 			<HintPath>D:\SteamLibrary\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Unity.Netcode.Runtime.dll</HintPath>

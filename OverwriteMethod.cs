@@ -53,7 +53,7 @@ namespace Pinger.Overrider
 	}
 
 	private static MethodInfo TargetMethod()
-	{
+
 	  return typeof(HUDManager).GetMethod("NodeIsNotVisible", BindingFlags.Instance | BindingFlags.NonPublic);
 	}
 
@@ -65,18 +65,18 @@ namespace Pinger.Overrider
   internal class KeyboardPing
   {
 	private static float lastQPress = 0;
-	const float Q_RESET = .3f; // one second
+	const float PING_RESET = .3f; // one second
 	private static bool isWaiting = false;
-	private static bool qPressed = false;
+	private static bool pingPressed = false;
 
 	private static IEnumerator WaitForNextQ()
 	{
 	  if (!isWaiting)
 	  {
 		isWaiting = true;
-		yield return new WaitForSeconds(Q_RESET);
+		yield return new WaitForSeconds(PING_RESET);
 
-		if (!qPressed)
+		if (!pingPressed)
 		  Plugin.Instance.createPingWherePlayerIsLooking(false);
 
 		isWaiting = false;
@@ -99,9 +99,9 @@ namespace Pinger.Overrider
 	  {
 		if (Keyboard.current.qKey.wasPressedThisFrame)
 		{
-		  if (!qPressed)
+		  if (!pingPressed)
 		  {
-			qPressed = true;
+			pingPressed = true;
 			__instance.StartCoroutine(WaitForNextQ());
 		  }
 		  else
@@ -111,13 +111,13 @@ namespace Pinger.Overrider
 		  }
 		  return;
 		}
-		if (qPressed)
+		if (pingPressed)
 		{
 		  lastQPress += Time.deltaTime;
 
-		  if (lastQPress >= Q_RESET)
+		  if (lastQPress >= PING_RESET)
 		  {
-			qPressed = false;
+			pingPressed = false;
 			isWaiting = false;
 			lastQPress = 0;
 		  }

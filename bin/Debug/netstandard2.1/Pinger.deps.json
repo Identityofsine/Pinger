@@ -15,10 +15,12 @@
           "UnityEngine.Modules": "2023.1.9",
           "Assembly-CSharp-firstpass": "0.0.0.0",
           "Assembly-CSharp": "0.0.0.0",
-          "LC_API": "1.0.0.0",
+          "LC_API": "2.1.1.0",
           "NewtonSoft.Json": "13.0.0.0",
           "Unity.InputSystem": "1.7.0.0",
-          "Unity.Netcode.Runtime": "0.0.0.0"
+          "Unity.Netcode.Runtime": "0.0.0.0",
+          "Unity.TextMeshPro": "0.0.0.0",
+          "UnityEngine.UI": "1.0.0.0"
         },
         "runtime": {
           "Pinger.dll": {}
@@ -374,11 +376,11 @@
           }
         }
       },
-      "LC_API/1.0.0.0": {
+      "LC_API/2.1.1.0": {
         "runtime": {
           "LC_API.dll": {
-            "assemblyVersion": "1.0.0.0",
-            "fileVersion": "1.0.0.0"
+            "assemblyVersion": "2.1.1.0",
+            "fileVersion": "2.1.1.0"
           }
         }
       },
@@ -406,25 +408,9 @@
           }
         }
       },
-      "Unity.Animation.Rigging/0.0.0.0": {
-        "runtime": {
-          "Unity.Animation.Rigging.dll": {
-            "assemblyVersion": "0.0.0.0",
-            "fileVersion": "0.0.0.0"
-          }
-        }
-      },
       "Unity.TextMeshPro/0.0.0.0": {
         "runtime": {
           "Unity.TextMeshPro.dll": {
-            "assemblyVersion": "0.0.0.0",
-            "fileVersion": "0.0.0.0"
-          }
-        }
-      },
-      "Unity.RenderPipelines.HighDefinition.Runtime/0.0.0.0": {
-        "runtime": {
-          "Unity.RenderPipelines.HighDefinition.Runtime.dll": {
             "assemblyVersion": "0.0.0.0",
             "fileVersion": "0.0.0.0"
           }
@@ -435,6 +421,22 @@
           "UnityEngine.UI.dll": {
             "assemblyVersion": "1.0.0.0",
             "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "Unity.Animation.Rigging/0.0.0.0": {
+        "runtime": {
+          "Unity.Animation.Rigging.dll": {
+            "assemblyVersion": "0.0.0.0",
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "Unity.RenderPipelines.HighDefinition.Runtime/0.0.0.0": {
+        "runtime": {
+          "Unity.RenderPipelines.HighDefinition.Runtime.dll": {
+            "assemblyVersion": "0.0.0.0",
+            "fileVersion": "0.0.0.0"
           }
         }
       },
@@ -938,7 +940,7 @@
       "serviceable": false,
       "sha512": ""
     },
-    "LC_API/1.0.0.0": {
+    "LC_API/2.1.1.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
@@ -958,22 +960,22 @@
       "serviceable": false,
       "sha512": ""
     },
-    "Unity.Animation.Rigging/0.0.0.0": {
-      "type": "reference",
-      "serviceable": false,
-      "sha512": ""
-    },
     "Unity.TextMeshPro/0.0.0.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
     },
-    "Unity.RenderPipelines.HighDefinition.Runtime/0.0.0.0": {
+    "UnityEngine.UI/1.0.0.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
     },
-    "UnityEngine.UI/1.0.0.0": {
+    "Unity.Animation.Rigging/0.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Unity.RenderPipelines.HighDefinition.Runtime/0.0.0.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
