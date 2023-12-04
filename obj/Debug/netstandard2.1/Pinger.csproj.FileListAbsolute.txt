@@ -47,3 +47,4 @@ C:\Users\leade\software\Pinger\obj\Debug\netstandard2.1\Pinger.csproj.CopyComple
 C:\Users\leade\software\Pinger\obj\Debug\netstandard2.1\Pinger.dll
 C:\Users\leade\software\Pinger\obj\Debug\netstandard2.1\Pinger.pdb
 C:\Users\leade\software\Pinger\bin\Debug\netstandard2.1\LC_API.dll
+C:\Users\leade\software\Pinger\bin\Debug\netstandard2.1\SettingsAPI.dll

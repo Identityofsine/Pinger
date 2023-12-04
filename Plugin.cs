@@ -8,6 +8,7 @@ using UnityEngine;
 using Newtonsoft.Json;
 using LC_API.ServerAPI;
 using Settings.Hook;
+//using SAPI = Settings.Hook.SettingsAPI;
 
 namespace Pinger
 {
@@ -56,6 +57,8 @@ namespace Pinger
 	private static bool _isPatched = false;
 	private static bool _isPatching = false;
 
+	//Settings
+	private SettingsComponent settingsComponent; 
 
 	//gameobjects
 	private static PlayerControllerB _mainPlayer = null;
@@ -70,7 +73,11 @@ namespace Pinger
 	  _harmony = new Harmony(PluginInfo.PLUGIN_GUID);
 	  _harmony.PatchAll(typeof(StartOfRound_Awake));
 	  _harmony.PatchAll(typeof(KeyboardPing));
-		SettingsAPI.getInstance().LoadSettings("Pinger");
+		//SAPI.getInstance().LoadSettings("Pinger", (obj) => {
+			//obj.addSetting("seewall", "(HOST)Ping Through Walls", SettingType.Toggle, "false");
+			//this.settingsComponent = obj;	
+		//});
+
 	  StartLogicLoop();
 	}
 
@@ -282,7 +289,9 @@ namespace Pinger
 	  copy.transform.position = new Vector3(x, y, z);
 	  copy.maxRange = 200;
 	  copy.minRange = 0;
-	  copy.requiresLineOfSight = false;
+		//Debug.Log($"Setting see wall to {this.settingsComponent.getSetting("seewall").value}");
+	  //copy.requiresLineOfSight = this.settingsComponent.getSetting("seewall").value == "true";
+		copy.requiresLineOfSight = true;
 	  if (isDanger)
 	  {
 		copy.nodeType = 1;
